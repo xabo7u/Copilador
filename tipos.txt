@@ -1,0 +1,9 @@
+// 0-> Fin de línea
+// 1-> Espacio
+// 2-> Identificador: "var1", "VARIABLE"
+// 3-> Literal numérico: 123, -1
+// 4-> Literal cadena: "Hola", "hey"
+// 5-> Comentario
+// 6-> Operador
+// 9-> Desconocido
+//10-> Fin de archivo
