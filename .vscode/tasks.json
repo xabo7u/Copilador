@@ -7,8 +7,8 @@
             "label": "Ejecutar Mask",
             "type": "shell",
             "command": "./scripts/test.sh",
-            "windows": {
-                "command": ".\\test.bat"
+            "linux": {
+                "command": "\\test.bash"
             },
             "group": {
                 "kind": "build",

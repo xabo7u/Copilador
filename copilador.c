@@ -14,10 +14,17 @@ char srcChar;
 int srcToktyp;
 char srcToken[255];
 
+//Error
+char msjError[255];
+
+//Funciones extras
 void concatenarTokenChar();
 
+//Archivo
 int next_is_EOL();
 int next_is_EOF();
+
+//Lexer
 int isAlphaUp();
 int isAlphaDown();
 int isNumeric();
@@ -30,15 +37,33 @@ void extractString();
 void extractComment();
 void nextToken();
 
+//Sintaxis
+void trimSpaces();
+void processBlock();
+int capture(char c[255]);
+int endOfBlock();
+int endOfInstruction();
+int endOfExpression();
+
+
 int main(){
     inFile = fopen("input.msk", "r");
+    strcpy(msjError, "");
     nextLine();
-    while (next_is_EOF() != 1) {
-        nextToken();
-        printf("%s\n", srcToken);
+    nextToken();
+
+    processBlock();
+
+    if(strcmp(msjError, "") != 0){
+        printf("ERROR: input.msk (%d,%d) %s", srcRow, idxLine, msjError);
     }
+
     fclose(inFile);
-    return 0;
+
+    if(strcmp(msjError, "") == 0){
+        return 0;
+    }
+    return 1;
 }
 
 //Devuelve 1 si el siguiente token corresponde a un Fin de Línea (EOL).
@@ -82,6 +107,8 @@ void nextChar(){
         srcChar = srcLine[idxLine];
     }
 }
+
+//>>                        Lexical Analysis                        <<//
 
 //Indica si el caracter en "srcChar" es alfabético mayúscula.
 int isAlphaUp(){
@@ -261,4 +288,52 @@ void concatenarTokenChar(){
     cadenaTemporal[0] = srcChar;
     cadenaTemporal[1] = '\0';
     strcat(srcToken, cadenaTemporal);
+}
+
+//>>                    Syntax Analysis                     <<//
+
+//Extrae espacios o comentarios o saltos de línea
+void trimSpaces(){
+    while(srcToktyp == 1 || srcToktyp == 5 || srcToktyp == 0)
+        nextToken();
+}
+
+//Toma la cadena indicada. Si no la encuentra, genera mensaje de error y devuelve 0
+int capture(char c[255]){
+    trimSpaces();
+    if(strcmp(srcToken,c) != 0) {
+        sprintf(msjError, "Se esperaba: \"%s\"", c);
+        return 0;
+    }
+    nextToken();
+    return 1;
+}  
+
+//Indica si estamos en el fin de un bloque.
+int endOfBlock(){
+    trimSpaces();
+    if(srcToktyp == 10 || strcmp(srcToken, "end") == 0 || strcmp(srcToken, "else") == 0)
+        return 1;
+    return 0;
+}
+
+//Indica si estamos en el fin de una instrucción.
+int endOfInstruction(){
+    if(endOfBlock() == 1 || strcmp(srcToken, ";") == 0)
+        return 1;
+    return 0;
+}
+
+int endOfExpression(){
+    if(endOfExpression() == 1 || strcmp(srcToken, ",") == 0 || strcmp(srcToken, ")") == 0 ||strcmp(srcToken, "]") == 0)
+        return 1;
+    return 0;
+}
+
+void processBlock(){
+    while(endOfBlock() != 1){
+        capture(";");
+        if(strcmp(msjError, "") != 0);
+            return;
+    }
 }

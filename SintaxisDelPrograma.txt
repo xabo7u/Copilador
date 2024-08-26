@@ -1,0 +1,134 @@
+//Declaración de variables
+var cad: string;
+
+//Declaración de procedimientos
+procedure hola();
+  cad = "hola";
+  print cad;
+end;
+
+//Programa principal
+hola();
+
+
+//Palabras reservadas
+"var"
+"integer"
+"string"
+"if"
+"then"
+"end"
+"while"
+"do"
+"procedure"
+"func"
+"break"
+"exit"
+
+Operadores
+Nuestro lenguaje tendrá un número reducido de operadores:
+
+«=» : Operador de asignación de variables y de comparación de números.
+«<>»: Operador de comparación de números.
+«>», «>=»: Operadores de comparación de números.
+«<«, «<=»: Operadores de comparación de números.
+«+»: Operador para suma de números o concatenación de cadenas.
+«-«: Operador para resta de números.
+«|» Operador OR lógico de dos números.
+
+x;    //Válido en el lado derecho de las asignaciones.
+x+1;  //Válido en el lado derecho de las asignaciones.
+x>0;  //Válido solo dentro de condicionales,
+
+x = x + y + 1;  //Más de 2 operandos después de la asignación
+x>y+1;          //Más de 2 operandos (dentro de condicionales)
+
+Tipo numérico (integer) -> Números con signo, de hasta 32 bits de longitud. Ejemplos: 1000, -50 Solo se permiten valores enteros.
+Tipo cadena (string) -> Cadenas de cualquier longitud, terminadas en caracter NULL. Ejemplo: «Hola». Las cadenas tendrán una longitud máxima de 255 caracteres.
+
+Variables
+Las variables se declaran con la palabra reservada «var»:
+
+var x: number;
+var cad: string;
+Solo se permite una declaración por cada palabra reservada «var».
+
+Arreglos
+Se pueden crear arreglos de datos de los tipos número y cadena:
+
+var x[10]: integer;
+var cad[5]: string;
+
+Las cadenas, se podrán tratar también como arreglos:
+
+var cad: string;
+var x: integer;
+cad = "ABC";
+x = cad[0];    //Lee primer carácter como número: 65.
+
+Estructuras
+Solo se reconocerá una sentencia condicional y un bucle.
+
+La sentencia condicional tendrá la forma:
+
+if <expresion> then 
+  <cuerpo> 
+end;
+Opcionalmente, se puede incluir la opción «ELSE»:
+
+if <expresion> then 
+  <cuerpo> 
+else 
+  <cuerpo> 
+end;
+El bucle a implementar será el «while», y tendrá la forma:
+
+while <expresión> do
+  <cuerpo> 
+end;
+Las expresiones a usar, tanto para la condicional IF como para el bucle WHILE, deben tener una estructura fija de dos operandos y un operador de comparación:
+
+a < 0
+contador >= 0
+cadena = "hola"
+
+
+Funciones del sistema
+Se implementarán algunas funciones internas, es decir, que no necesitan ser declaradas. Estas son:
+
+print <expresion>
+Permite imprimir un valor por consola.
+
+println <expresion>
+Permite imprimir un valor por consola, agregando un salto de línea al final.
+
+exit <expresion>
+Sale de una función, devolviendo un valor.
+
+length(<expresión>)
+Devuelve la longitud de una cadena, como número.
+
+StrToInt(<expresión>)
+Devuelve una cadena convertida a número.
+
+IntToStr(<expresión>)
+Convierte un número a una cadena.
+
+Procedimientos y Funciones
+Adicionalmente a las funciones predefinidas, el lenguaje debe permitir al programador la creación de sus propias funciones y procedimientos:
+
+Por simplicidad las funciones y procedimientos se crearán de la misma forma, usando la palabra reservada «procedure».
+
+La estructura de un procedimiento es:
+
+procedure <nombre>([lista de parámetros]);
+  <declaración de variables>
+  <cuerpo>
+end
+Un ejemplo de procedimiento podría ser:
+
+procedure mostrar_mensaje();
+  var txt: string;
+  txt = "Mensaje";
+  print txt; 
+end
