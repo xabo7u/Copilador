@@ -1,3 +1,2 @@
-//Ejemplo
-cad = "Hola";
-println 123;
+var arrnotas[3]: string;
+var casa: integer;

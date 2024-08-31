@@ -11,6 +11,7 @@ int srcRow = 0;
 
 //Campos relativos a la lectura de tokens
 char srcChar;
+char srcCharEsp[2];
 int srcToktyp;
 char srcToken[255];
 
@@ -40,29 +41,44 @@ void nextToken();
 //Sintaxis
 void trimSpaces();
 void processBlock();
+void parserProgram();
+void asmOut(char lin[255]);
+void asmLine(char lin[255]);
+void asmInt(char lin[255]);
+void asmStr(char lin[255]);
+void asmIntArr(char lin[255], int asmCant);
+void asmStrArr(char lin[255], int asmCant);
+void registerVar(char vName[255], int vType, int arrSiz);
+void parserVar();
 int capture(char c[255]);
 int endOfBlock();
 int endOfInstruction();
 int endOfExpression();
 
+//Tabla de variables
+int nVars;
+char varNames[255][255];
+int varType[255]; //1 Int, 2 String
+int varArrSiz[255];
 
 int main(){
     inFile = fopen("input.msk", "r");
+    outFile = fopen("input.asm", "w");
+
     strcpy(msjError, "");
     nextLine();
     nextToken();
 
-    processBlock();
-
+    parserProgram();
     if(strcmp(msjError, "") != 0){
-        printf("ERROR: input.msk (%d,%d) %s", srcRow, idxLine, msjError);
+        printf("ERROR: input.msk (%d,%d): %s",srcRow, idxLine, msjError);
     }
 
+    fclose(outFile);
     fclose(inFile);
 
-    if(strcmp(msjError, "") == 0){
+    if(strcmp(msjError, "") == 0)
         return 0;
-    }
     return 1;
 }
 
@@ -164,7 +180,7 @@ void extractSpace(){
         if(next_is_EOL() == 1){
             return;
         }
-        if (srcChar == ' '|| srcChar == '\t'){
+        if (srcChar == ' '|| srcChar == '\n'){
             isToken = 1;
         } else {
             isToken = 0;
@@ -230,6 +246,8 @@ void nextToken(){
         nextLine();
     } else {
         srcChar =  srcLine[idxLine];
+        srcCharEsp[0] = srcLine[idxLine];
+        srcCharEsp[1] = srcLine[idxLine + 1];
         if(isAlphaUp() == 1){
             extractIdentifier();
             return;
@@ -242,7 +260,7 @@ void nextToken(){
             extractNumber();
         } else if(srcChar == ' '){
             extractSpace();
-        } else if(srcChar == '\t'){
+        } else if(strcmp(srcCharEsp, "\n") == 0){
             extractSpace();
         } else if(srcChar == '"'){
             extractString();
@@ -325,7 +343,7 @@ int endOfInstruction(){
 }
 
 int endOfExpression(){
-    if(endOfExpression() == 1 || strcmp(srcToken, ",") == 0 || strcmp(srcToken, ")") == 0 ||strcmp(srcToken, "]") == 0)
+    if(endOfInstruction() == 1 || strcmp(srcToken, ",") == 0 || strcmp(srcToken, ")") == 0 ||strcmp(srcToken, "]") == 0)
         return 1;
     return 0;
 }
@@ -337,3 +355,144 @@ void processBlock(){
             return;
     }
 }
+
+void parserProgram(){
+    if(endOfBlock() == 1)
+        return;
+    fprintf(outFile, "section .data\n");
+    while(strcmp(srcToken,"var") == 0){
+        parserVar();
+        if(strcmp(msjError, "") != 0)
+            return;
+        capture(";");
+        if(strcmp(msjError, "") != 0)
+            return;
+        trimSpaces();
+    }
+    trimSpaces();
+    while(strcmp(srcToken,"procedure") == 0){
+        
+    }
+    fprintf(outFile, "_start:");
+    processBlock();
+}
+
+void asmOut(char lin[255]){
+    fprintf(outFile, "%s\n",lin);
+}
+
+void asmLine(char lin[255]){
+    fprintf(outFile, "    %s\n",lin);
+}
+
+void asmInt(char lin[255]){
+    fprintf(outFile, "    %s dd 0\n",lin);
+}
+
+void asmIntArr(char lin[255], int asmCant){
+    char asmIntArrLine[255] = "dd", asmIntArrAdd[2] = " 0";
+    for(int i = 0;i < asmCant; i++){
+        strcat(asmIntArrLine, asmIntArrAdd);
+        if (i < asmCant - 1) {
+            strcat(asmIntArrLine, ",");
+        }
+    }
+    strcat(asmIntArrLine, "\n");
+    fprintf(outFile, "    %s %s", lin, asmIntArrLine);
+}
+
+void asmStr(char lin[255]){
+    fprintf(outFile, "    %s db 255 dup (0)\n",lin);
+}
+
+void asmStrArr(char lin[255], int asmCant){
+    char asmStrArrLine[255] = "dd ", arrCantVecesStr[20] = "", cpyLin[255];
+    int arrCantVeces = 1;
+    for(int i = 0;i < asmCant; i++){
+        strcpy(cpyLin, lin);
+        sprintf(arrCantVecesStr, "%d", arrCantVeces);
+        strcat(cpyLin, arrCantVecesStr);
+        asmStr(cpyLin);
+        strcat(asmStrArrLine, cpyLin);
+        if (i < asmCant - 1) {
+            strcat(asmStrArrLine, ",");
+        }
+        arrCantVeces++;
+    }
+    strcat(asmStrArrLine, "\n");
+    fprintf(outFile, "    %s %s", lin, asmStrArrLine);
+}
+
+//Registra una variable en los arreglos correspondientes.
+void registerVar(char vName[255], int vType, int arrSiz){
+    snprintf(varNames[nVars], sizeof(nVars), vName);
+    varType[nVars] = vType;
+    varArrSiz[nVars] = arrSiz;
+    nVars++;
+}
+
+void parserVar(){
+    char varName[255], typName[255], arrSize[255], arrSize256[255];
+    int arrSizeN;
+    nextToken();
+    trimSpaces();
+    if(srcToktyp != 2){
+        strcpy(msjError, "Se esperaba un identifiacador.");
+        return;
+    }
+    strcpy(varName, srcToken);
+    nextToken();
+    trimSpaces();
+    if(strcmp(srcToken,"[") == 0){
+        nextToken();
+        trimSpaces();
+        if(srcToktyp != 3){
+            strcpy(msjError, "Se esperaba numero.");
+            return;
+        }
+        strcpy(arrSize, srcToken);
+        arrSizeN = atoi(srcToken);
+        sprintf(arrSize256, "%d", arrSizeN*256);
+        nextToken();
+        capture("]");
+        if(strcmp(msjError, "") != 0)
+            return;
+        capture(":");
+        if(strcmp(msjError, "") != 0)
+            return;
+        trimSpaces();
+        strcpy(typName, srcToken);
+        if(strcmp(typName, "integer") == 0){
+            nextToken();
+            asmIntArr(varName, arrSizeN);
+            registerVar(varName, 1, arrSizeN);
+        } else if(strcmp(typName, "string") == 0){
+            nextToken();
+            asmStrArr(varName, arrSizeN);
+            registerVar(varName, 2, arrSizeN);
+        } else {
+            strcpy(msjError, "Tipo desconocido");
+            return;
+        }
+    } else if(strcmp(srcToken, ":") == 0){
+        nextToken();
+        trimSpaces();
+        strcpy(typName, srcToken);
+        if(strcmp(typName, "integer") == 0){
+            nextToken();
+            asmInt(varName);
+            registerVar(varName,1,0);
+        } else if(strcmp(typName, "string") == 0){
+            nextToken();
+            asmStr(varName);
+            registerVar(varName,2,0);
+        } else {
+            strcpy(msjError, "Tipo desconocido");
+            return;
+        }
+    } else {
+        strcpy(msjError, "Se esperaba, ':' o '[]'.");
+        return;
+    }
+}
+
