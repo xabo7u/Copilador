@@ -14,6 +14,9 @@ char srcChar;
 char srcCharEsp[2];
 int srcToktyp;
 char srcToken[255];
+int resType;
+char constrName[255];
+int nconstr;
 
 //Error
 char msjError[255];
@@ -42,18 +45,21 @@ void nextToken();
 void trimSpaces();
 void processBlock();
 void parserProgram();
-void asmOut(char lin[255]);
-void asmLine(char lin[255]);
-void asmInt(char lin[255]);
-void asmStr(char lin[255]);
-void asmIntArr(char lin[255], int asmCant);
-void asmStrArr(char lin[255], int asmCant);
-void registerVar(char vName[255], int vType, int arrSiz);
+void asmOut(char[255]);
+void asmLine(char[255]);
+void asmInt(char[255]);
+void asmStr(char[255]);
+void asmIntArr(char[255], int );
+void asmStrArr(char[255], int );
+void registerVar(char[255], int , int );
 void parserVar();
 int capture(char c[255]);
 int endOfBlock();
 int endOfInstruction();
 int endOfExpression();
+
+void getOperand();
+void declareConstantString(char[255]);
 
 //Tabla de variables
 int nVars;
@@ -65,6 +71,8 @@ int main(){
     inFile = fopen("input.msk", "r");
     outFile = fopen("input.asm", "w");
 
+    fprintf(outFile, "    .data");
+    fprintf(outFile, "    _strA db 256 sup(0)')");
     strcpy(msjError, "");
     nextLine();
     nextToken();
@@ -350,6 +358,7 @@ int endOfExpression(){
 
 void processBlock(){
     while(endOfBlock() != 1){
+        getOperand();
         capture(";");
         if(strcmp(msjError, "") != 0);
             return;
@@ -496,3 +505,43 @@ void parserVar(){
     }
 }
 
+void getOperand(){
+    char resCteStr[255], buffer[255];
+    trimSpaces();
+    if (srcToktyp == 3){
+        resType = 1;
+        sprintf(buffer, "mov eax, %d", srcToken);
+        asmLine(buffer);
+        nextToken();
+    } else if (srcToktyp == 4){
+        resType = 2;
+        strncpy(resCteStr, srcToken + 1, strlen(srcToken) - 2);
+        resCteStr[strlen(srcToken) - 2] = '\0';
+        declareConstantString(resCteStr);
+        char line[255];
+        snprintf(line, sizeof(asmLine), "lea rsi, [%s]\nlea rdi, [_strA]\ncall szCopy", constrName);
+        asmLine(line);
+        nextToken();
+    } else if(srcToktyp == 2){
+
+    } else {
+        strcpy(msjError, "Error de sintaxis");
+        return;
+    }
+}
+
+void declareConstantString(char constStr[255]){
+    char tmp[255], buffer[255];
+    sprintf(tmp, "_cstr%d", nconstr);
+    strcpy(constrName, tmp);
+    asmLine("section .data");
+    if (strcmp(constStr, "") == 0){
+        sprintf(buffer, "%s db 0", constrName);
+        asmLine(buffer);
+    } else {
+        sprintf(buffer, "%s db %s,0", constrName, constStr);
+        asmLine(buffer);
+    }
+    asmLine(".code");
+    nconstr = nconstr + 1;
+}
